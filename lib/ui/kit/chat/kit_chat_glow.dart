@@ -74,13 +74,15 @@ class _KitChatGlowFrameState extends State<KitChatGlowFrame>
   @override
   void initState() {
     super.initState();
-    if (widget.live != null) _wake();
+    // Tests and reduced motion never start the loop (MOT-7 stillness): the
+    // ticker only wakes here when ambient loops may run at all.
+    if (widget.live != null && KitMotion.loops) _wake();
   }
 
   @override
   void didUpdateWidget(KitChatGlowFrame old) {
     super.didUpdateWidget(old);
-    if (widget.live != null) {
+    if (widget.live != null && KitMotion.loops) {
       _wake();
     } else if (_sweep.bright > 0.01 && _loops) {
       // The turn ended: ease the glow out, then the ticker stops itself.
@@ -219,7 +221,7 @@ class _ChatGlowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (sweep.bright < 0.01) return;
-    if (size.width <= 4 || size.height <= 4) return;
+    if (size.shortestSide <= 4) return;
     final metric = _outline(size).computeMetrics().first;
     final length = metric.length;
     if (length <= 0) return;
