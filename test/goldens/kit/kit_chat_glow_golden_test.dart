@@ -38,7 +38,12 @@ void main() {
       testWidgets('working · ${kitGallerySize(size)} · $mode', (tester) async {
         await kitGalleryPart(
           tester,
-          name: kitGalleryName('kit_chat_glow_working', size, light: light),
+          name: kitGalleryName(
+            // The part snake, not the file: KitChatGlowFrame.
+            'kit_chat_glow_frame_working',
+            size,
+            light: light,
+          ),
           size: size,
           light: light,
           child: _working(),
@@ -51,7 +56,7 @@ void main() {
       await kitGalleryPart(
         tester,
         name: kitGalleryName(
-          'kit_chat_glow_working',
+          'kit_chat_glow_frame_working',
           size,
           light: light,
           text2: true,
