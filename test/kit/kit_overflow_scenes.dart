@@ -1666,6 +1666,17 @@ final kitOverflowScenes = <KitOverflowScene>[
         ),
       ),
     ),
+    // kit_chat_glow.dart: the chat frame wearing the run. The sweep never
+    // starts under the matrix (loops stay off in tests), so the scene holds
+    // the running configuration still and checks the frame fits its child.
+    KitOverflowScene(
+      ['KitChatGlowFrame'],
+      'working',
+      build: (_, c) => KitChatGlowFrame(
+        live: const KitTurnLive(activity: KitTurnActivity.thinking),
+        child: KitText(c.t('The agent is working', 'الوكيل يعمل')),
+      ),
+    ),
   ]),
 ];
 

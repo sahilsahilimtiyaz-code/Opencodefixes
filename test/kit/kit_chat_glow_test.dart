@@ -9,6 +9,8 @@ import 'package:opencode_mobile/ui/kit/chat/kit_chat_glow.dart';
 import 'package:opencode_mobile/ui/kit/chat/kit_turn.dart';
 import 'package:opencode_mobile/ui/kit/kit_motion.dart';
 
+import 'kit_motion_still.dart';
+
 const _childKey = Key('glow-child');
 
 Future<void> _pump(
@@ -48,6 +50,32 @@ const _thinking = KitTurnLive(activity: KitTurnActivity.thinking);
 const _writing = KitTurnLive(activity: KitTurnActivity.writing, pace: 1);
 
 void main() {
+  // Gate G8x (MOT-7): every kit.dart part registers reduced-motion samples
+  // in its own test file. A running frame must settle after one pump under
+  // both stillnesses, like an idle one.
+  kitMotionStillTests(
+    'KitChatGlowFrame',
+    builds: {
+      'idle': () => const KitChatGlowFrame(child: Text('Chat glow')),
+      'running': () => const KitChatGlowFrame(
+        live: KitTurnLive(activity: KitTurnActivity.thinking),
+        child: Text('Chat glow'),
+      ),
+    },
+    changes: {
+      'run starts': KitMotionChange(
+        build: () => const KitChatGlowFrame(child: Text('Chat glow')),
+        act: (tester, stage) => stage.rebuild(
+          const KitChatGlowFrame(
+            live: KitTurnLive(activity: KitTurnActivity.writing),
+            child: Text('Chat glow'),
+          ),
+        ),
+        shows: 'Chat glow',
+      ),
+    },
+  );
+
   group('KitChatGlowFrame (KitChatGlow.md)', () {
     testWidgets('idle paints nothing and starts no loop', (tester) async {
       await _pump(tester, _frame());
@@ -81,14 +109,19 @@ void main() {
       expect(find.byKey(_childKey), findsOneWidget);
     });
 
-    testWidgets('the glow carries no semantics of its own', (tester) async {
-      await _pump(tester, _frame(live: _writing));
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is ExcludeSemantics && w.excluding,
+    testWidgets('the glow preserves the child semantics', (tester) async {
+      // The frame wraps whole screens: it must never hide their labels.
+      // (A previous revision wrapped the child in ExcludeSemantics and hid
+      // the chat's approval labels from e7_session_approvals_layout_test.)
+      await _pump(
+        tester,
+        const KitChatGlowFrame(
+          live: _writing,
+          child: Text('Chat glow', key: _childKey),
         ),
-        findsWidgets,
       );
+      expect(find.text('Chat glow'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Chat glow')), findsOneWidget);
     });
   });
 

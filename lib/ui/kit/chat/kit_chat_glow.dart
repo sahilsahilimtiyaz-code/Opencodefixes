@@ -3,8 +3,9 @@
 // chat's frame: a faint full-perimeter ring with one bright comet head and
 // its halo travelling it. Idle (no live turn) paints nothing at all.
 //
-// The sweep is decorative and left out of semantics; the turn's live line
-// and the composer's caption stay the readable status. The ticker only runs
+// The sweep itself is decorative and adds no semantic nodes; the child
+// keeps its labels and actions, and the turn's live line and the composer's
+// caption stay the readable status. The ticker only runs
 // while there is something to show, and stops with the route (TickerMode)
 // and the app in the background.
 //
@@ -45,6 +46,8 @@ class _GlowSweep {
 /// A frame that glows while the agent runs: `live` is the chat's running
 /// turn ([KitTurnLive]), null when nothing runs. The child keeps its size;
 /// the sweep paints over it without taking space or semantics.
+///
+/// States: working.
 class KitChatGlowFrame extends StatefulWidget {
   const KitChatGlowFrame({super.key, required this.child, this.live});
 
@@ -74,13 +77,15 @@ class _KitChatGlowFrameState extends State<KitChatGlowFrame>
   @override
   void initState() {
     super.initState();
-    if (widget.live != null) _wake();
+    // Tests and reduced motion never start the loop (MOT-7 stillness): the
+    // ticker only wakes here when ambient loops may run at all.
+    if (widget.live != null && KitMotion.loops) _wake();
   }
 
   @override
   void didUpdateWidget(KitChatGlowFrame old) {
     super.didUpdateWidget(old);
-    if (widget.live != null) {
+    if (widget.live != null && KitMotion.loops) {
       _wake();
     } else if (_sweep.bright > 0.01 && _loops) {
       // The turn ended: ease the glow out, then the ticker stops itself.
@@ -160,16 +165,16 @@ class _KitChatGlowFrameState extends State<KitChatGlowFrame>
   @override
   Widget build(BuildContext context) {
     final radius = KitTokens.of(context).cardRadius;
-    return ExcludeSemantics(
-      child: CustomPaint(
-        foregroundPainter: _ChatGlowPainter(
-          sweep: _sweep,
-          radius: radius,
-          travels: _travels,
-          repaint: _repaint,
-        ),
-        child: widget.child,
+    // No ExcludeSemantics here: the foreground painter contributes no
+    // semantic nodes itself, and the child keeps its own labels and actions.
+    return CustomPaint(
+      foregroundPainter: _ChatGlowPainter(
+        sweep: _sweep,
+        radius: radius,
+        travels: _travels,
+        repaint: _repaint,
       ),
+      child: widget.child,
     );
   }
 }
@@ -219,7 +224,7 @@ class _ChatGlowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (sweep.bright < 0.01) return;
-    if (size.width <= 4 || size.height <= 4) return;
+    if (size.shortestSide <= 4) return;
     final metric = _outline(size).computeMetrics().first;
     final length = metric.length;
     if (length <= 0) return;
