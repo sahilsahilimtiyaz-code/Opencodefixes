@@ -108,9 +108,13 @@ class _TeamMergedCelebrationState extends State<TeamMergedCelebration> {
   void _ask() {
     if (_asked || !widget.merged) return;
     _asked = true;
-    TeamCelebrations.claim(widget.profileId, widget.runId).then((celebrate) {
+    // Best-effort celebration: never let a storage hiccup fail the frame.
+    TeamCelebrations.claim(
+      widget.profileId,
+      widget.runId,
+    ).then((celebrate) {
       if (celebrate && mounted) setState(() => _show = true);
-    });
+    }, onError: (_) {});
   }
 
   @override

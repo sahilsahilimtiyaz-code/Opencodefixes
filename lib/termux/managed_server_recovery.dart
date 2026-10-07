@@ -204,11 +204,16 @@ class ManagedServerRecovery extends ChangeNotifier with WidgetsBindingObserver {
       final raw = prefs.getString(preferenceKey(profileID));
       if (raw != null &&
           (_owners[prefs] == null || _owners[prefs] == profileID)) {
-        final token = (jsonDecode(raw) as Map)['token'];
-        if (token is String && token.isNotEmpty) {
-          await TermuxBridge.run(
-            TermuxBridge.recoveryControlScript(token, enable: false),
-          );
+        try {
+          final decoded = jsonDecode(raw);
+          final token = decoded is Map ? decoded['token'] : null;
+          if (token is String && token.isNotEmpty) {
+            await TermuxBridge.run(
+              TermuxBridge.recoveryControlScript(token, enable: false),
+            );
+          }
+        } catch (_) {
+          // Corrupt stored recovery: nothing safe to revoke.
         }
       }
     }
@@ -258,7 +263,15 @@ class ManagedServerRecovery extends ChangeNotifier with WidgetsBindingObserver {
       id,
     ).setBehavior(AutomationBehavior.restartPhoneServer, false);
     if (_deletingProfiles[prefs]?.contains(id) ?? false) return;
-    final data = jsonDecode(raw) as Map<String, dynamic>;
+    final decoded = (() {
+      try {
+        return jsonDecode(raw);
+      } catch (_) {
+        return null;
+      }
+    })();
+    if (decoded is! Map<String, dynamic>) return;
+    final data = Map<String, dynamic>.from(decoded);
     data['enabled'] = false;
     final token = data['token'];
     final revoking = token is String && token.isNotEmpty
@@ -358,7 +371,11 @@ class ManagedServerRecovery extends ChangeNotifier with WidgetsBindingObserver {
     try {
       final raw = prefs.getString(preferenceKey(profileID));
       if (raw == null) return;
-      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) throw const FormatException('Invalid recovery');
+      final data = decoded is Map<String, dynamic>
+          ? decoded
+          : Map<String, dynamic>.from(decoded);
       _legacyEnabled = data['enabled'] is bool ? data['enabled'] as bool : null;
       final token = data['token'];
       final count = data['attempts'];
@@ -410,7 +427,14 @@ class ManagedServerRecovery extends ChangeNotifier with WidgetsBindingObserver {
     for (final id in ids) {
       final raw = prefs.getString(preferenceKey(id));
       if (raw == null) continue;
-      final count = (jsonDecode(raw) as Map)['attempts'];
+      final decoded = (() {
+        try {
+          return jsonDecode(raw);
+        } catch (_) {
+          return null;
+        }
+      })();
+      final count = decoded is Map ? decoded['attempts'] : null;
       if (count is! int || count < 0 || count > maxAttempts) {
         throw StateError('Could not read recovery attempts');
       }

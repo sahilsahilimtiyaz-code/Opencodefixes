@@ -88,10 +88,15 @@ abstract final class TermuxMigrationService {
       (k) => k.startsWith('oc.termuxMigration.'),
     )) {
       try {
-        final value = jsonDecode(store.prefs.getString(key)!) as Map;
-        if (value['job'] is String) jobs.add(value['job'] as String);
+        final raw = store.prefs.getString(key);
+        if (raw == null) continue;
+        final decoded = jsonDecode(raw);
+        if (decoded is! Map) continue;
+        if (decoded['job'] is String) {
+          jobs.add(decoded['job'] as String);
+        }
       } catch (_) {
-        return;
+        continue;
       } // Preserve caches when ownership is uncertain.
     }
     final root = Directory('${support.path}/migrations');

@@ -167,8 +167,10 @@ abstract final class TeamRoles {
       ),
   ];
 
-  static TeamRole defaultFor(String id) =>
-      defaults.firstWhere((r) => r.id == id);
+  static TeamRole defaultFor(String id) => defaults.firstWhere(
+    (r) => r.id == id,
+    orElse: () => throw StateError('Unknown team role'),
+  );
 
   /// Words that point at a built-in role (lowercase, matched as whole
   /// words or word prefixes).

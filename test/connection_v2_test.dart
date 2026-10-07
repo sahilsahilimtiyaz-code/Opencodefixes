@@ -1182,6 +1182,75 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('catalog collapses exact duplicate providers and models', (
+    tester,
+  ) async {
+    // Seen live: the server lists GPT-5.6 twice under one OpenAI label.
+    // Exact (providerID, modelID) duplicates collapse to one row, while a
+    // different provider ID sharing the display name (a route) stays.
+    final store = await _store({});
+    final api = _V2Api(
+      providersResult: ProvidersResponse(
+        providers: [
+          ProviderInfo(
+            id: 'openai',
+            name: 'OpenAI',
+            modelIDs: const ['gpt-5.6', 'gpt-5.6'],
+          ),
+          ProviderInfo(
+            id: 'openai',
+            name: 'OpenAI',
+            modelIDs: const ['gpt-5.6'],
+          ),
+          ProviderInfo(
+            id: 'openai-oauth',
+            name: 'OpenAI',
+            modelIDs: const ['gpt-5.6'],
+          ),
+        ],
+        defaultProviderID: 'openai',
+        defaultModelID: 'gpt-5.6',
+      ),
+      agentsResult: [AgentInfo(name: 'build')],
+    );
+    final controller = ConnectionController(
+      store,
+      apiFactory: (_) => api,
+      repositoryFactory: (_) => _QuestionRepository(legacyUnavailable: false),
+      eventStreamFactory:
+          ({required api, required onEvent, required onStatus, onError}) =>
+              _FakeEventStream(
+                api: api,
+                onEvent: onEvent,
+                onStatus: onStatus,
+                onError: onError,
+              ),
+    );
+    addTearDown(controller.dispose);
+
+    await controller.connect(
+      ServerProfile(
+        id: 'server',
+        name: 'Server',
+        baseUrl: 'http://127.0.0.1:1',
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      controller.catalog?.providers.map((provider) => provider.id),
+      ['openai', 'openai-oauth'],
+    );
+    expect(
+      controller.catalog?.models.map(
+        (model) => '${model.providerID}/${model.id}',
+      ),
+      ['openai/gpt-5.6', 'openai-oauth/gpt-5.6'],
+    );
+    controller.dispose();
+  });
+
   testWidgets(
     'model shortcuts and chat choices survive location changes and isolate profiles',
     (tester) async {

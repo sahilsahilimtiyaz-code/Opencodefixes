@@ -126,13 +126,14 @@ class SetupController {
   /// server accepts a schema or that a package can run on its host.
   Future<SetupProposal> propose(List<SetupEdit> edits) => _run(() async {
     _requireCurrent();
-    if (_base == null) {
+    final base = _base;
+    if (base == null) {
       throw const SetupFailure(
         SetupFailureCode.invalid,
         'Read the current configuration first.',
       );
     }
-    if (_base!.containsKey('sources')) {
+    if (base.containsKey('sources')) {
       throw const SetupFailure(
         SetupFailureCode.unsupported,
         'This server returns layered sources. Effective-config diffs are unavailable.',
@@ -151,17 +152,17 @@ class SetupController {
           ),
         )
         .toList(growable: false);
-    final unavailable = _mutationReason(_edits);
+    final unavailable = _mutationReason(base, _edits);
     final proposal = SetupProposal(
       id: _id(),
       changes: _edits
           .map(
             (e) => SetupDiff(
               path: e.path,
-              before: setupRedact(_at(_base!, e.path), e.path.last),
+              before: setupRedact(_at(base, e.path), e.path.last),
               after: setupRedact(e.value, e.path.last),
               remove: e.remove,
-              beforePresent: _has(_base!, e.path),
+              beforePresent: _has(base, e.path),
               afterPresent: !e.remove,
             ),
           )
@@ -186,9 +187,9 @@ class SetupController {
     return proposal;
   });
 
-  String? _mutationReason(List<SetupEdit> edits) {
+  String? _mutationReason(Map<String, Object?> base, List<SetupEdit> edits) {
     for (final edit in edits) {
-      Object? ancestor = _base;
+      Object? ancestor = base;
       for (final segment in edit.path.take(edit.path.length - 1)) {
         if (ancestor is! Map || !ancestor.containsKey(segment)) {
           break;
@@ -208,10 +209,10 @@ class SetupController {
         continue;
       }
       if (root == 'mcp' && edit.path.length == 2) {
-        final previous = _at(_base!, edit.path);
+        final previous = _at(base, edit.path);
+        final mcp = base['mcp'];
         final exists =
-            (_base!['mcp'] is Map) &&
-            (_base!['mcp'] as Map).containsKey(edit.path.last);
+            (mcp is Map) && mcp.containsKey(edit.path.last);
         if (exists &&
             (previous is! Map ||
                 previous['type'] != 'remote' ||

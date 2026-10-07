@@ -3221,20 +3221,33 @@ class ConnectionController extends ChangeNotifier {
           );
         }
       }
+      // The server may list a provider or a model twice (seen live:
+      // GPT-5.6 twice under one OpenAI label). Collapse exact duplicates
+      // here so the picker shows one row; different provider IDs that share
+      // a display name (routes like Global/China) are intentional and stay.
+      final fallbackProviders = <CatalogProvider>[];
+      final seenProviderIDs = <String>{};
+      for (final provider in nextProviders.providers) {
+        if (!seenProviderIDs.add(provider.id)) continue;
+        fallbackProviders.add(
+          CatalogProvider(
+            id: provider.id,
+            name: provider.name,
+            enabled: true,
+          ),
+        );
+      }
+      final fallbackModels = <CatalogModel>[];
+      final seenModelKeys = <String>{};
+      for (final provider in nextProviders.providers) {
+        for (final modelID in provider.modelIDs) {
+          if (!seenModelKeys.add('${provider.id}\0$modelID')) continue;
+          fallbackModels.add(_catalogModelFromProvider(provider, modelID));
+        }
+      }
       final fallbackCatalog = CatalogSnapshot(
-        providers: [
-          for (final provider in nextProviders.providers)
-            CatalogProvider(
-              id: provider.id,
-              name: provider.name,
-              enabled: true,
-            ),
-        ],
-        models: [
-          for (final provider in nextProviders.providers)
-            for (final modelID in provider.modelIDs)
-              _catalogModelFromProvider(provider, modelID),
-        ],
+        providers: fallbackProviders,
+        models: fallbackModels,
         agents: [
           for (final agent in nextAgents)
             CatalogAgent(
@@ -9428,6 +9441,7 @@ class ConnectionController extends ChangeNotifier {
     final owner = promptShelfProfileID;
     final savedProfile = store.profiles.firstWhere(
       (candidate) => candidate.id == owner,
+      orElse: () => throw StateError('The saved prompt profile is gone'),
     );
     final savedOrigin = savedProfile.baseUrl;
     final activeID = store.activeId;
@@ -9482,7 +9496,10 @@ class ConnectionController extends ChangeNotifier {
     if (_isKeptQueuedDraft(id)) {
       // Only embedded bytes travel: a removed server's file or link is not
       // this server's, so it is named as unavailable instead.
-      final prompt = keptQueuedDrafts.firstWhere((p) => p.id == id);
+      final prompt = keptQueuedDrafts.firstWhere(
+        (p) => p.id == id,
+        orElse: () => throw StateError('The saved prompt changed'),
+      );
       return DraftAttachmentRecovery(
         [
           for (final attachment in prompt.attachments)
@@ -9495,7 +9512,10 @@ class ConnectionController extends ChangeNotifier {
       );
     }
     final owner = promptShelfProfileID;
-    final prompt = _promptShelf.stashes(owner).firstWhere((p) => p.id == id);
+    final prompt = _promptShelf.stashes(owner).firstWhere(
+      (p) => p.id == id,
+      orElse: () => throw StateError('The saved prompt changed'),
+    );
     final sameLocation =
         sameDirectoryPath(prompt.directory, directory) &&
         prompt.workspace == workspace;

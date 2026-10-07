@@ -151,6 +151,17 @@ abstract final class KitMotion {
   static const Duration edgeLightHueFade = Duration(milliseconds: 450);
   static const double edgeLightFadeSpan = 20;
 
+  /// The chat glow frame's sweep (KitChatGlowFrame): the comet head circling
+  /// the chat while the agent runs. It never travels faster than
+  /// [chatGlowMaxLapsPerSecond] (one lap in 7 s, reached only while words
+  /// stream at full pace), rests at [chatGlowThinkingLapsPerSecond] while
+  /// the model thinks, and every change of speed eases over
+  /// [chatGlowSpeedEase]. The glow fades in and out over [chatGlowFade].
+  static const double chatGlowMaxLapsPerSecond = 1 / 7;
+  static const double chatGlowThinkingLapsPerSecond = 1 / 12;
+  static const Duration chatGlowSpeedEase = Duration(milliseconds: 800);
+  static const Duration chatGlowFade = Duration(milliseconds: 450);
+
   static const Curve enter = Curves.easeOutCubic;
   static const Curve exit = Curves.easeInCubic;
   static const Curve emphasized = Curves.easeInOutCubicEmphasized;

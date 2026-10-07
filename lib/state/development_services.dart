@@ -60,8 +60,10 @@ class DevelopmentServices extends ChangeNotifier {
     }
   }
 
-  DevelopmentService _service(String id) =>
-      services.firstWhere((s) => s.id == id);
+  DevelopmentService _service(String id) => services.firstWhere(
+    (s) => s.id == id,
+    orElse: () => throw StateError('The development service is gone'),
+  );
 
   DevelopmentServiceStatus status(DevelopmentService service) {
     if (service.run == null) return DevelopmentServiceStatus.notStarted;

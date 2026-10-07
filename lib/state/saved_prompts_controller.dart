@@ -99,7 +99,10 @@ class SavedPromptsController extends ChangeNotifier {
     required bool sameLocation,
     bool partial = false,
   }) async {
-    final prompt = prompts.firstWhere((p) => p.id == id);
+    final prompt = prompts.firstWhere(
+      (p) => p.id == id,
+      orElse: () => throw StateError('The saved prompt is gone'),
+    );
     if (!sameLocation && prompt.locationBound) {
       throw StateError('Saved prompt belongs to another location');
     }

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/server_probe.dart';
+import '../domain/workspace_paths.dart';
 import '../l10n/app_localizations.dart';
 import '../state/profiles.dart';
 import 'builtin_linux.dart';
@@ -500,6 +501,12 @@ class BuiltinProjectFolders {
   /// Makes [path] a git project unless it already is a folder. `created` is
   /// false for a folder that was already there.
   Future<({String path, bool created})> create(String path) async {
+    // Shared phone storage is not mounted into the app's Ubuntu: without
+    // this, `mkdir -p /sdcard/…` would make an empty namesake inside the
+    // app's private files while the person believes their real folder is
+    // connected.
+    final storageProblem = phoneSharedStorageProblem(path);
+    if (storageProblem != null) throw BuiltinLinuxException(storageProblem);
     final result = await linux.run(
       BuiltinLinux.createFolderScript(path),
       timeout: const Duration(seconds: 60),

@@ -510,8 +510,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _clearBackExit() {
     _lastBackAt = null;
-    if (_backExitHint == null) return;
-    _backExitHint!.cancel();
+    _backExitHint?.cancel();
     _backExitHint = null;
     if (mounted) setState(() {});
   }

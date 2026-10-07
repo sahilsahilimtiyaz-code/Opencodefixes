@@ -66,6 +66,44 @@ String? workspaceDirectoryProblem(String? path) {
 
 final _folderName = RegExp(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$');
 
+/// True for Android shared-storage paths (`/sdcard`, `/storage/emulated/0`,
+/// removable volumes under `/storage`, `/mnt/media_rw`, …).
+///
+/// OpenCode inside the app runs in its own Ubuntu, which only sees the
+/// folders bound into it (`/root/projects`); shared storage is not mounted
+/// there, so `test -d /sdcard/…` fails even when the folder exists on the
+/// phone. Without this check the app offers to "create" the folder and makes
+/// an empty namesake inside its private files instead. A server in Termux
+/// (with storage access granted) or on another machine may well see these
+/// paths, so this is only a reason to refuse for the in-app server.
+bool isPhoneSharedStoragePath(String? path) {
+  if (path == null) return false;
+  final value = _normalize(path);
+  if (value == '/sdcard' || value.startsWith('/sdcard/')) return true;
+  if (value == '/storage' || value.startsWith('/storage/')) return true;
+  if (value == '/mnt/sdcard' || value.startsWith('/mnt/sdcard/')) {
+    return true;
+  }
+  if (value == '/mnt/media_rw' || value.startsWith('/mnt/media_rw/')) {
+    return true;
+  }
+  if (value == '/mnt/expand' || value.startsWith('/mnt/expand/')) return true;
+  if (value == '/external_sd' || value.startsWith('/external_sd/')) {
+    return true;
+  }
+  return false;
+}
+
+/// Why [path] cannot be opened on OpenCode inside the app, or null when it
+/// can. Shared phone storage is not mounted into the app's Ubuntu; only a
+/// plain sentence, so the localized dialog wrapper can carry it.
+String? phoneSharedStorageProblem(String? path) {
+  if (!isPhoneSharedStoragePath(path)) return null;
+  return 'Phone storage (${_normalize(path!)}) is not visible to OpenCode '
+      'inside the app, even when the folder exists on the phone. Move the '
+      'project under $managedProjectsDirectory instead.';
+}
+
 /// Reason a new project folder [name] is unusable, or null when it is a
 /// single safe path segment.
 String? projectFolderNameProblem(String name) {

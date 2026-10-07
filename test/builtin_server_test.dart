@@ -235,5 +235,25 @@ void main() {
         );
       },
     );
+
+    test(
+      'create refuses phone storage instead of a private namesake',
+      () async {
+        final folders = BuiltinProjectFolders(linux);
+        linux.scripts.clear();
+        await expectLater(
+          folders.create('/sdcard/codeAnything'),
+          throwsA(
+            isA<BuiltinLinuxException>().having(
+              (e) => e.message,
+              'message',
+              contains('/root/projects'),
+            ),
+          ),
+        );
+        // Nothing ran in Ubuntu: no fake /sdcard was made.
+        expect(linux.scripts, isEmpty);
+      },
+    );
   });
 }

@@ -57,6 +57,48 @@ void main() {
     });
   });
 
+  group('isPhoneSharedStoragePath', () {
+    test('matches shared storage roots and their children', () {
+      for (final path in [
+        '/sdcard',
+        '/sdcard/codeAnything',
+        '/sdcard/',
+        '/storage',
+        '/storage/emulated/0',
+        '/storage/emulated/0/Download/app',
+        '/storage/1234-ABCD/code',
+        '/mnt/sdcard/app',
+        '/mnt/media_rw/1234-ABCD',
+        '/mnt/expand/1/app',
+        '/external_sd/app',
+      ]) {
+        expect(isPhoneSharedStoragePath(path), isTrue, reason: path);
+      }
+    });
+
+    test('ignores in-app and server paths', () {
+      for (final path in [
+        null,
+        '',
+        '/root/projects/app',
+        '/root/sdcard-backup',
+        '/home/eslam/sdcard',
+        '/data/app/sdcard',
+        r'C:\sdcard',
+      ]) {
+        expect(isPhoneSharedStoragePath(path), isFalse, reason: '$path');
+      }
+    });
+
+    test('phoneSharedStorageProblem explains the in-app blind spot', () {
+      expect(phoneSharedStorageProblem('/root/projects/app'), isNull);
+      expect(
+        phoneSharedStorageProblem('/sdcard/codeAnything'),
+        contains('/root/projects'),
+      );
+    });
+  });
+
   group('projectFolderNameProblem', () {
     test('accepts one safe segment', () {
       expect(projectFolderNameProblem('my-app'), isNull);

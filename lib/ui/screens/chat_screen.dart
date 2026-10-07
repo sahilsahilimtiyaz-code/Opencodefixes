@@ -8502,23 +8502,28 @@ class _ChatScreenState extends State<ChatScreen>
                     return _watchLayer(watch: watch, body: anchored);
                   }
                   // The floating layer (VL §6): the transcript scrolls under
-                  // the glass composer, the only glass on the page.
-                  return KitComposer.layer(
-                    body: anchored,
-                    aboveMinHeight: _aboveComposerFloor(
-                      bodyConstraints,
-                      pendingPermissions,
-                    ),
-                    above: _aboveComposer(
-                      bodyConstraints: bodyConstraints,
-                      compactComposer: compactComposer,
-                      pendingPermissions: pendingPermissions,
-                    ),
-                    composer: _floatingComposer(
-                      bodyConstraints: bodyConstraints,
-                      compactComposer: compactComposer,
-                      busy: busy,
-                      showAttachmentNote: showAttachmentNote,
+                  // the glass composer, the only glass on the page. While
+                  // the agent runs, the chat glow frame sweeps its conic
+                  // rainbow around the whole layer; idle, it paints nothing.
+                  return KitChatGlowFrame(
+                    live: _live?.live,
+                    child: KitComposer.layer(
+                      body: anchored,
+                      aboveMinHeight: _aboveComposerFloor(
+                        bodyConstraints,
+                        pendingPermissions,
+                      ),
+                      above: _aboveComposer(
+                        bodyConstraints: bodyConstraints,
+                        compactComposer: compactComposer,
+                        pendingPermissions: pendingPermissions,
+                      ),
+                      composer: _floatingComposer(
+                        bodyConstraints: bodyConstraints,
+                        compactComposer: compactComposer,
+                        busy: busy,
+                        showAttachmentNote: showAttachmentNote,
+                      ),
                     ),
                   );
                 },

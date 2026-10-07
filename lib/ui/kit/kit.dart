@@ -103,6 +103,7 @@
 /// | [KitMarkdown] | agent Markdown in kit text: the prose of a reply or a thought |
 /// | [KitComposer], [KitComposerChips], [KitComposerStatusStrip] | the composer, its chips, and the standing facts above it |
 /// | [KitQueuedMessage] | STATE-17 everything waiting to reach the agent, in one bubble |
+/// | [KitChatGlowFrame] | §10 the chat's frame wearing the run: a conic rainbow sweep while the agent works, dark when idle |
 /// | [KitAgentStrip] | who is working on a team task, in order |
 /// | [KitFoldersOpenScene], [ServersLinkScene], [ServersWelcomeScene], [SetupPhoneScene], [SetupReadyScene], [SetupStepsScene], [SetupUnpluggedScene] | §10 scenes: a folder opening, the servers and setup moments |
 /// | [StatesFolderScene], [StatesSearchScene], [StatesSheetScene], [StatesTerminalScene], [StatesTrayScene], [StatesUnpluggedScene], [StatesWorkingScene] | §10 scenes for the not-normal states |
@@ -214,6 +215,7 @@ export 'chat/kit_composer_chips.dart';
 export 'chat/kit_find_mark.dart';
 export 'chat/kit_work_line.dart';
 export 'chat/kit_queued_message.dart';
+export 'chat/kit_chat_glow.dart';
 export 'kit_dialog.dart';
 
 export 'team/kit_digest.dart';

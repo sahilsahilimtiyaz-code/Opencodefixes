@@ -220,7 +220,10 @@ class CodexGateway
     _sessions[session.id] = session;
     _statuses[session.id] = codexSessionStatus(thread);
     while (_sessions.length > 512) {
-      final id = _sessions.keys.firstWhere((id) => !_resumed.contains(id));
+      final id = _sessions.keys.firstWhere(
+        (id) => !_resumed.contains(id),
+        orElse: () => _sessions.keys.first,
+      );
       _sessions.remove(id);
       _statuses.remove(id);
       _turns.remove(id);

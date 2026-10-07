@@ -183,23 +183,38 @@ class _IsolateRecognitionHandle implements VoiceRecognitionHandle {
 }
 
 void _sherpaWorker(Map<String, Object> message) {
-  final sendPort = message['sendPort']! as SendPort;
+  final sendPort = message['sendPort'];
+  if (sendPort is! SendPort) {
+    throw ArgumentError('Voice worker requires a sendPort');
+  }
   sherpa.OfflineRecognizer? recognizer;
   sherpa.OfflineStream? stream;
   try {
     sherpa.initBindings();
-    final data = (message['samples']! as TransferableTypedData).materialize();
+    final samplesValue = message['samples'];
+    final encoderValue = message['encoder'];
+    final decoderValue = message['decoder'];
+    final tokensValue = message['tokens'];
+    final threadsValue = message['threads'];
+    if (samplesValue is! TransferableTypedData ||
+        encoderValue is! String ||
+        decoderValue is! String ||
+        tokensValue is! String ||
+        threadsValue is! int) {
+      throw const FormatException('Voice worker received invalid payload');
+    }
+    final data = samplesValue.materialize();
     final samples = data.asFloat32List();
     final request = VoiceRecognitionRequest(
-      encoderPath: message['encoder']! as String,
-      decoderPath: message['decoder']! as String,
-      tokensPath: message['tokens']! as String,
+      encoderPath: encoderValue,
+      decoderPath: decoderValue,
+      tokensPath: tokensValue,
       language: VoiceLanguage.values.firstWhere(
         (value) => value.whisperCode == message['language'],
         orElse: () => VoiceLanguage.auto,
       ),
       samples: samples,
-      numThreads: message['threads']! as int,
+      numThreads: threadsValue,
     );
     recognizer = sherpa.OfflineRecognizer(
       buildWhisperRecognizerConfig(request),

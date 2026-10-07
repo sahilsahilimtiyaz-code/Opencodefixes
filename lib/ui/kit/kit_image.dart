@@ -157,6 +157,8 @@ class _KitCoverResizeImage extends ImageProvider<_KitCoverKey> {
     // image still reports wasSynchronouslyLoaded (no cross-fade).
     Completer<_KitCoverKey>? completer;
     SynchronousFuture<_KitCoverKey>? result;
+    Object? asyncError;
+    StackTrace? asyncStack;
     base.obtainKey(configuration).then((Object key) {
       final cover = _KitCoverKey(key, width, height);
       if (completer == null) {
@@ -164,8 +166,18 @@ class _KitCoverResizeImage extends ImageProvider<_KitCoverKey> {
       } else {
         completer.complete(cover);
       }
+    }, onError: (Object error, StackTrace stackTrace) {
+      if (completer == null) {
+        asyncError = error;
+        asyncStack = stackTrace;
+      } else {
+        completer.completeError(error, stackTrace);
+      }
     });
     if (result != null) return result!;
+    if (asyncError != null) {
+      return Future<_KitCoverKey>.error(asyncError!, asyncStack);
+    }
     completer = Completer<_KitCoverKey>();
     return completer.future;
   }

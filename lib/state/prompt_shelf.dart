@@ -191,9 +191,15 @@ class PromptShelfStore {
     for (final key in preferences.getKeys().where(
       (key) => key.startsWith(prefix),
     )) {
-      final prompt = StashedPrompt.fromJson(
-        jsonDecode(preferences.getString(key)!) as Map<String, dynamic>,
-      );
+      final raw = preferences.getString(key);
+      if (raw == null) {
+        throw const FormatException('Stash row missing');
+      }
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Stash row corrupt');
+      }
+      final prompt = StashedPrompt.fromJson(decoded);
       if (prompt.id.isEmpty || key != '$prefix${prompt.id}') {
         throw const FormatException('Stash identity changed');
       }
@@ -496,7 +502,10 @@ class PromptShelfStore {
     required bool sameLocation,
     void Function()? checkCurrent,
   }) => _write(profile, () async {
-    final prompt = stashes(profile).firstWhere((prompt) => prompt.id == id);
+    final prompt = stashes(profile).firstWhere(
+      (prompt) => prompt.id == id,
+      orElse: () => throw StateError('The saved prompt is gone'),
+    );
     if (prompt.attachmentRefs.isNotEmpty) {
       final vault = _attachmentVault;
       if (vault == null) throw StateError('Attachment storage is not enabled');

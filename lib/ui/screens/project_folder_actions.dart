@@ -303,6 +303,14 @@ class ProjectFolderActions {
         onSubmit: (value) async {
           final path = value.trim();
           if (inApp == null) return controller.probeProjectFolder(path);
+          // Shared phone storage is not mounted into the app's Ubuntu, so
+          // `test -d /sdcard/…` fails even when the folder exists on the
+          // phone. Say so directly instead of offering to "create" an empty
+          // namesake inside the app's private files.
+          final storageProblem = phoneSharedStorageProblem(path);
+          if (storageProblem != null) {
+            return l10n.projectFolderCheckFailed(storageProblem);
+          }
           // Checked in Ubuntu, not by asking OpenCode: OpenCode would
           // remember a missing folder as broken and keep failing there
           // after it is made.
