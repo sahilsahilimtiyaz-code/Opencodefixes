@@ -3238,10 +3238,10 @@ class ConnectionController extends ChangeNotifier {
         );
       }
       final fallbackModels = <CatalogModel>[];
-      final seenModelKeys = <String>{};
+      final seenModels = <(String, String)>{};
       for (final provider in nextProviders.providers) {
         for (final modelID in provider.modelIDs) {
-          if (!seenModelKeys.add('${provider.id}\0$modelID')) continue;
+          if (!seenModels.add((provider.id, modelID))) continue;
           fallbackModels.add(_catalogModelFromProvider(provider, modelID));
         }
       }

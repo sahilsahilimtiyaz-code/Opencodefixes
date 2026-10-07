@@ -16,7 +16,9 @@
 // orange, yellow, light green, blue, purple and pink, with periodic
 // softening dips that pass through near-white.
 import 'dart:math' as math;
+import 'dart:ui' show PathMetric;
 
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../kit_effects.dart';
