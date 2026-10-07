@@ -46,6 +46,8 @@ class _GlowSweep {
 /// A frame that glows while the agent runs: `live` is the chat's running
 /// turn ([KitTurnLive]), null when nothing runs. The child keeps its size;
 /// the sweep paints over it without taking space or semantics.
+///
+/// States: working.
 class KitChatGlowFrame extends StatefulWidget {
   const KitChatGlowFrame({super.key, required this.child, this.live});
 
