@@ -12,7 +12,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
   # KitSince reads the time through package:clock so tests can fake it.
   clock: ^1.1.2
   # Dropping files onto the composer. Flutter exposes no native file-drop
