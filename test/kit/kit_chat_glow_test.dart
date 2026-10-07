@@ -109,14 +109,19 @@ void main() {
       expect(find.byKey(_childKey), findsOneWidget);
     });
 
-    testWidgets('the glow carries no semantics of its own', (tester) async {
-      await _pump(tester, _frame(live: _writing));
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is ExcludeSemantics && w.excluding,
+    testWidgets('the glow preserves the child semantics', (tester) async {
+      // The frame wraps whole screens: it must never hide their labels.
+      // (A previous revision wrapped the child in ExcludeSemantics and hid
+      // the chat's approval labels from e7_session_approvals_layout_test.)
+      await _pump(
+        tester,
+        const KitChatGlowFrame(
+          live: _writing,
+          child: Text('Chat glow', key: _childKey),
         ),
-        findsWidgets,
       );
+      expect(find.text('Chat glow'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Chat glow')), findsOneWidget);
     });
   });
 

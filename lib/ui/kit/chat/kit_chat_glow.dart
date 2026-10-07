@@ -3,8 +3,9 @@
 // chat's frame: a faint full-perimeter ring with one bright comet head and
 // its halo travelling it. Idle (no live turn) paints nothing at all.
 //
-// The sweep is decorative and left out of semantics; the turn's live line
-// and the composer's caption stay the readable status. The ticker only runs
+// The sweep itself is decorative and adds no semantic nodes; the child
+// keeps its labels and actions, and the turn's live line and the composer's
+// caption stay the readable status. The ticker only runs
 // while there is something to show, and stops with the route (TickerMode)
 // and the app in the background.
 //
@@ -162,16 +163,16 @@ class _KitChatGlowFrameState extends State<KitChatGlowFrame>
   @override
   Widget build(BuildContext context) {
     final radius = KitTokens.of(context).cardRadius;
-    return ExcludeSemantics(
-      child: CustomPaint(
-        foregroundPainter: _ChatGlowPainter(
-          sweep: _sweep,
-          radius: radius,
-          travels: _travels,
-          repaint: _repaint,
-        ),
-        child: widget.child,
+    // No ExcludeSemantics here: the foreground painter contributes no
+    // semantic nodes itself, and the child keeps its own labels and actions.
+    return CustomPaint(
+      foregroundPainter: _ChatGlowPainter(
+        sweep: _sweep,
+        radius: radius,
+        travels: _travels,
+        repaint: _repaint,
       ),
+      child: widget.child,
     );
   }
 }

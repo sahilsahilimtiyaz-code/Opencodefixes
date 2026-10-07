@@ -56,7 +56,9 @@ and the composer read. Null means idle, and the frame stays dark.
 - Technique mirrors the composer's edge painter: rounded-rect outline,
   `PathMetric` segments, blurred stroke pieces — no `Gradient` widgets, no
   `BoxShadow`, no `ImageFilter`.
-- Decorative: wrapped in `ExcludeSemantics`; never a status carrier.
+- Decorative: the foreground painter adds no semantic nodes itself, and
+  the child keeps its labels and actions (the frame wraps whole screens, so
+  it must never hide them).
 
 ## Rules
 
